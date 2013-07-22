@@ -482,6 +482,7 @@ class myView extends SurfaceView implements SurfaceHolder.Callback
 
     
          	
+     	
 //GAMELOOP         	
          Thread myThread = new Thread(new Runnable() {
              @Override
@@ -489,13 +490,14 @@ class myView extends SurfaceView implements SurfaceHolder.Callback
             	 
 	  		       while (true) 
 	  		       {
-	  		        	egl.eglWaitNative(EGL10.EGL_CORE_NATIVE_ENGINE, null);
-	  		      		EGL10 egl1 = (EGL10)EGLContext.getEGL();	  
+	  		    		EGL10 egl1 = (EGL10)EGLContext.getEGL();	
+	  		    		egl1 .eglWaitNative(EGL10.EGL_CORE_NATIVE_ENGINE, null);
+	  		      	  
 	  		
 	  		      			Moai.update ();  //MOAIRenderMgr::Get ().Render (); GETS CALLED OF UPDATE  
-	  		 		    	
-	  		 		 	egl1.eglSwapBuffers(MoaiActivity.mEGLDisplay,MoaiActivity.mEGLSurface);
-	  		 		 	egl.eglWaitGL();
+	 
+	  		      		egl1 .eglSwapBuffers(MoaiActivity.mEGLDisplay,MoaiActivity.mEGLSurface);
+	  		      	egl1 .eglWaitGL();
 	  		 		 	
 			  		 		  	try {
 			  						Thread.sleep(5);
@@ -509,6 +511,7 @@ class myView extends SurfaceView implements SurfaceHolder.Callback
       
              }
          });
+         
          
    
          myThread.start();
