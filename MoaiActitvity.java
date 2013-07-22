@@ -604,7 +604,7 @@ class myView extends SurfaceView implements SurfaceHolder.Callback
              		egl.eglSwapBuffers(MoaiActivity.mEGLDisplay,MoaiActivity.mEGLSurface);
              		Moai.update (); 
              		egl.eglWaitGL();
-                 // egl.eglSwapBuffers(eglDisplay, surface);
+        
                   handler.post(this);
                 }
               };
