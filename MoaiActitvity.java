@@ -6,6 +6,8 @@ import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.egl.EGLContext;
 import javax.microedition.khronos.egl.EGLDisplay;
 import javax.microedition.khronos.egl.EGLSurface;
+import javax.microedition.khronos.opengles.GL10;
+import javax.microedition.khronos.opengles.GL11;
 
 
 
@@ -18,6 +20,7 @@ import android.graphics.Canvas;
 
 
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.StrictMode;
 import android.util.Log;
 
@@ -45,9 +48,11 @@ public class MoaiActivity extends Activity {
 
     
     // Main components
-    protected static MoaiActivity mSingleton;       
+    protected static MoaiActivity mSingleton;   
+    
+    
     protected static  myView mySurface;  
-    protected static ViewGroup mLayout;    
+    protected static  ViewGroup mLayout;    
 
 
     // EGL objects
@@ -55,7 +60,10 @@ public class MoaiActivity extends Activity {
     protected static EGLSurface  mEGLSurface;
     protected static EGLDisplay  mEGLDisplay;
     protected static EGLConfig   mEGLConfig;
-    protected static int mGLMajor, mGLMinor;
+    
+    
+    protected static int mGLMajor = 2; 
+    protected static int mGLMinor = 0;
 
 
     static {
@@ -101,6 +109,7 @@ public class MoaiActivity extends Activity {
     Moai.createContext ();                 
   
   	Moai.init ();   
+  	
     Moai.setScreenSize (1280,720 );                
     Moai.setViewSize (1280,720);	  
     
@@ -109,15 +118,18 @@ public class MoaiActivity extends Activity {
     
     
 
-    mSingleton 	= this;    	
-	mySurface 	= new myView(getApplication()); 	
+    mSingleton 	= this;    
+    
+	mySurface 	= new myView(this.getApplicationContext()); 	
+	
 	mySurface.getHolder().setFixedSize(1280,720 ); 
 
 	LinearLayoutIMETrap myLayout = MoaiKeyboard.getContainer ();
-	setContentView ( myLayout );  
-
-	myLayout.addView ( mySurface,0 ); 
 	
+	
+	setContentView ( myLayout );
+
+	myLayout.addView ( mySurface,0); 
 
 
 //*****************
@@ -127,14 +139,15 @@ Log.v("SDL", "trace-0: Set Path()");
 
 		try {
 		
-		ApplicationInfo myApp = getPackageManager ().getApplicationInfo ( getPackageName (), 0 );   
+		ApplicationInfo myApp = getPackageManager ().getApplicationInfo ( getPackageName (), 0 );  
 		
 				Moai.mount ( "bundle", myApp.publicSourceDir );
 				Moai.setWorkingDirectory ( "bundle/assets/lua" );
 				
-		
 		} catch ( NameNotFoundException e ) {
-				MoaiLog.e ( "MoaiActivity onCreate: Unable to locate the application bundle" );
+			
+					MoaiLog.e ( "MoaiActivity onCreate: Unable to locate the application bundle" );
+					
 		}
 
 
@@ -356,11 +369,16 @@ return handled || super.onKeyDown(keyCode, event);
 class myView extends SurfaceView implements SurfaceHolder.Callback
 {
 
-    public myView(Context context)
+    private GL10 gl;
+	
+
+	public myView(Context context)
     {          
          super(context);
-         getHolder().addCallback(this);           
-         setFocusable(true);
+         
+         SurfaceHolder holder = getHolder();         
+         getHolder().addCallback(this);   
+         //setFocusable(true);
     }
 
 
@@ -369,49 +387,45 @@ class myView extends SurfaceView implements SurfaceHolder.Callback
     }
 
     
- 
-/////////////////////////////////////////////////////////////////
-    
-    public static void runScripts(String[] strings) {
 
-        for ( String file : strings ) {          
-        			MoaiLog.i ( "MoaiRenderer runScripts: Running " + file + " script" );            
-        			Moai.runScript ( file );
-        }  
-      }
- 
-    
-    
-    
     
 	@Override
 	public void surfaceChanged(SurfaceHolder arg0, int arg1, int arg2, int arg3) {
 		// TODO Auto-generated method stub
 		 Log.v("SDL", "trace-3: surfaceChanged()");
 		 
+		 
+		   //es type     
+	        //MoaiActivity.mGLMajor    = 2;
+	        //MoaiActivity.mGLMinor    = 1;
+	        
     	 
 //EGL INSTANCE
         final EGL10 egl = (EGL10)EGLContext.getEGL();
 
         
 //DEFAULT DISPLAY
-        EGLDisplay dpy = egl.eglGetDisplay(EGL10.EGL_DEFAULT_DISPLAY);
-        
-        if (dpy == EGL10.EGL_NO_DISPLAY) {
+        MoaiActivity.mEGLDisplay = egl.eglGetDisplay(EGL10.EGL_DEFAULT_DISPLAY);
+       
+        //CLAUSE
+        if ( MoaiActivity.mEGLDisplay == EGL10.EGL_NO_DISPLAY) {
         	Log.v("SDL", "trace-: DISPLAY FAILED");
         }
 
-        
+        //INFO
+          Log.d("SDL", "trace-EGL vendor: " + 		egl.eglQueryString( MoaiActivity.mEGLDisplay, EGL10.EGL_VENDOR));
+          Log.d("SDL", "trace-EGL version: " + 		egl.eglQueryString( MoaiActivity.mEGLDisplay, EGL10.EGL_VERSION));
+          Log.d("SDL", "trace-EGL extensions: " + 	egl.eglQueryString( MoaiActivity.mEGLDisplay, EGL10.EGL_EXTENSIONS)); 
         
 //CONFIGS   
-  
-    	
-        int[] version = new int[2];
-        egl.eglInitialize(dpy, version);
+  	
+        int[] version = new int[2];        
+        egl.eglInitialize(MoaiActivity.mEGLDisplay, version);
 
-   
+
+        
        // int EGL_OPENGL_ES2_BIT = 4;
-      
+        /*  
     	int[] my_attribs = new int[] {            		                     
     		            EGL10.EGL_RED_SIZE,      8,
     		            EGL10.EGL_GREEN_SIZE,    8,
@@ -423,58 +437,112 @@ class myView extends SurfaceView implements SurfaceHolder.Callback
     		            //0x303B, // EGL10.EGL_MIN_SWAP_INTERVAL,
     		           // 0x303C, // EGL10.EGL_MAX_SWAP_INTERVAL,
     		            };
-    	 /*  
-    	  int[] configSpec = {
+    	 */ 
+        
+        /*
+    	  int[] my_attribs = {
                   EGL10.EGL_DEPTH_SIZE,   16,
                   EGL10.EGL_NONE
           };
-          */ 
+         */
         
+        final int EGL_OPENGL_ES2_BIT = 4;
         
-        
-        EGLConfig[] configs = new EGLConfig[1];
-        int[] num_config = new int[1];
-        
-        egl.eglChooseConfig(dpy, my_attribs, configs, 1, num_config);
-        
-        
-        EGLConfig config = configs[0];
-        
-        MoaiActivity.mEGLDisplay = dpy;
-        MoaiActivity.mEGLConfig  = config;
-        MoaiActivity.mGLMajor    = 2;
-        MoaiActivity.mGLMinor    = 0;
-       
-        
-        
-//CREATE CONTEXT         
-       int EGL_CONTEXT_CLIENT_VERSION=0x3098; 
+        int[] my_attribs = new int[]{
+        	      EGL10.EGL_STENCIL_SIZE, 1,  /* Don't change this position in array! */
+        	      EGL10.EGL_RED_SIZE, 8,
+        	      EGL10.EGL_GREEN_SIZE, 8,
+        	      EGL10.EGL_BLUE_SIZE, 8,
+        	      EGL10.EGL_ALPHA_SIZE, 8,
+        	      EGL10.EGL_DEPTH_SIZE, 16,
+        	      //EGL10.EGL_SAMPLE_BUFFERS, 2,
+        	    EGL10.EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
+        	      EGL10.EGL_NONE,
+        	    // EGL10.EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
+        	    };
 
-        int contextAttrs[] = new int[] { 
-        		EGL_CONTEXT_CLIENT_VERSION, 
-        			MoaiActivity.mGLMajor , 
-        			EGL10.EGL_NONE 
-			 };
+        
+        
+   
+      
+        EGLConfig[] configs = new EGLConfig[1];
+        int[] num_config = new int[1]; 
+        
+        
+        egl.eglChooseConfig(MoaiActivity.mEGLDisplay, my_attribs, configs, 1, num_config);
+        
+  
+   //config     
+        EGLConfig config = configs[0];  
+        MoaiActivity.mEGLConfig  = config;
+
        
-        MoaiActivity.mEGLContext = egl.eglCreateContext(dpy, config,EGL10.EGL_NO_CONTEXT, contextAttrs); 
+        
+   
+        
+        
+
     
         
-//CREATE SURFACE // PASS TO ezSURFACE       
-        EGLSurface surface = egl.eglCreateWindowSurface(MoaiActivity.mEGLDisplay, MoaiActivity.mEGLConfig,MoaiActivity.mySurface, null);
-
-//MAKE CURRENT
-        egl.eglMakeCurrent(dpy, surface, surface, MoaiActivity.mEGLContext);
+   
+   		//this.gl = (GL11)MoaiActivity.mEGLContext.getGL();
+   		
+   		
         
-        MoaiActivity.mEGLSurface = surface; 
+//CREATE SURFACE // PASS TO ezSURFACE       
+        MoaiActivity.mEGLSurface = egl.eglCreateWindowSurface(MoaiActivity.mEGLDisplay, MoaiActivity.mEGLConfig,MoaiActivity.mySurface, null);
+
+        if (egl.EGL_NO_SURFACE ==  MoaiActivity.mEGLSurface) 
+        	{
+        			Log.v("SDL", "trace-: surface FAILED");
+        	}
         
         
 
       
         
-//DETECT
-	 	Log.v("SDL", "trace-3-context-->Moai.detectGraphicsContext");   
-     				Moai.detectGraphicsContext ();        
         
+//CREATE CONTEXT         
+        int EGL_CONTEXT_CLIENT_VERSION=0x3098; 
+
+         int contextAttrs[] = new int[] { 
+         			EGL_CONTEXT_CLIENT_VERSION, 
+         			MoaiActivity.mGLMajor, 
+         			EGL10.EGL_NONE 
+ 			 };
+        
+         MoaiActivity.mEGLContext = egl.eglCreateContext(MoaiActivity.mEGLDisplay, config,EGL10.EGL_NO_CONTEXT, contextAttrs);         
+        
+//MAKE CURRENT
+        
+        
+      //  egl.eglMakeCurrent(MoaiActivity.mEGLDisplay, surface, surface, MoaiActivity.mEGLContext);           
+        if (false == egl.eglMakeCurrent(MoaiActivity.mEGLDisplay,  MoaiActivity.mEGLSurface ,  MoaiActivity.mEGLSurface , MoaiActivity.mEGLContext))
+        	{
+        			Log.v("SDL", "trace-: eglMakeCurrent FAILED");
+        	}
+        
+        
+        
+//kills everything but it doesn't  
+//BUT DON"T        
+        //egl.eglDestroyContext(MoaiActivity.mEGLDisplay,  MoaiActivity.mEGLContext);
+        
+        
+      
+        
+        GL10 gl = (GL10) MoaiActivity.mEGLContext.getGL();
+        Log.d("SDL", "trace-OpenGL vendor: " + gl.glGetString(GL10.GL_VENDOR));
+        Log.d("SDL", "trace-OpenGL version: " + gl.glGetString(GL10.GL_VERSION));
+        Log.d("SDL", "trace-OpenGL renderer: " + gl.glGetString(GL10.GL_RENDERER));
+        Log.d("SDL", "trace-OpenGL extensions: " + gl.glGetString(GL10.GL_EXTENSIONS));
+        
+//DETECT
+	 		Log.v("SDL", "trace-3-context-->Moai.detectGraphicsContext");   
+	 		
+     				Moai.detectGraphicsContext ();
+     				
+     	        
 //RUN
       	 	Log.v("SDL", "trace-4-context-->RUNNING LUA EZRA");            
       	 	runScripts ( new String [] { "../init.lua", "main.lua" } );
@@ -482,125 +550,85 @@ class myView extends SurfaceView implements SurfaceHolder.Callback
 
     
          	
- //GAMELOOP  
-
-               
-
+//GAMELOOP   
+      	 	
      /*
-
          Thread myThread = new Thread(new Runnable() {
-
              @Override
-
              public void run() {
-
-                 
-
-                               while (true)
-
-                               {
-
-                                        EGL10 egl = (EGL10)EGLContext.getEGL();
-
-                                       
-
-                       
-
-                                        egl.eglWaitNative(EGL10.EGL_CORE_NATIVE_ENGINE, null);
-
-                                 
-
-                       
-
-                                                Moai.update ();  //MOAIRenderMgr::Get ().Render (); GETS CALLED OF UPDATE  
-
-                         
-
-                                        egl.eglSwapBuffers(MoaiActivity.mEGLDisplay,MoaiActivity.mEGLSurface);
-
-                                        egl.eglWaitGL();
-
-                                       
-
-                         
-
-                                               
-
-                                                                try {
-
-                                                                        Thread.sleep(5);
-
-                                                                } catch (InterruptedException e) {
-
-                                                                        // TODO Auto-generated catch block
-
-                                                                        e.printStackTrace();
-
-                                                                }  
-
-                                                 
-
-                               }
-
-                 
-
-                       
-
-                               
-
-                               
-
+            	 
+	  		       while (true) 
+	  		       {
+	  		    		EGL10 egl = (EGL10)EGLContext.getEGL();
+	  		    		
+	    		
+	  		    		egl.eglWaitNative(EGL10.EGL_CORE_NATIVE_ENGINE, null);
+	  		      	  
+	  		
+	  		      			Moai.update ();  //MOAIRenderMgr::Get ().Render (); GETS CALLED OF UPDATE  
+	  		 
+	  		      		egl.eglSwapBuffers(MoaiActivity.mEGLDisplay,MoaiActivity.mEGLSurface);
+	  		      		egl.eglWaitGL();
+	  		      		
+	  		 
+	  		 		 	
+			  		 		  	try {
+			  						Thread.sleep(5);
+			  					} catch (InterruptedException e) {
+			  						// TODO Auto-generated catch block
+			  						e.printStackTrace();
+			  					}  
+			  		          
+	  		       } 
+            	 
+	  		
+	  		        
+	  		        
              }
-
          });
-
          
-
    
-
          myThread.start();
-
-       
-
-        */
-
-               
-
-     
-
-            final Handler handler = new Handler();
-
-            Runnable myDraw = new Runnable() {
-
-               
-
-                @Override
-
-                public void run() {
-
-                        egl.eglSwapBuffers(MoaiActivity.mEGLDisplay,MoaiActivity.mEGLSurface);
-
-                        Moai.update ();
-
-                 // egl.eglSwapBuffers(eglDisplay, surface);
-
-                  handler.post(this);
-
-                }
-
-              };
-
-              handler.post(myDraw);
-
- 
-
- 
         
+        */
+      	 	
+      
+      	  final Handler handler = new Handler();
+            Runnable myDraw = new Runnable() {
+            	
+                @Override
+                public void run() {
+                	
+               		//egl.eglWaitNative(EGL10.EGL_CORE_NATIVE_ENGINE, null);
+                	
+             		egl.eglSwapBuffers(MoaiActivity.mEGLDisplay,MoaiActivity.mEGLSurface);
+             		Moai.update (); 
+             		egl.eglWaitGL();
+                 // egl.eglSwapBuffers(eglDisplay, surface);
+                  handler.post(this);
+                }
+              };
+              handler.post(myDraw);
+           
       
   
 		 
 		 
 	}
+	
+	
+/////////////////////////////////////////////////////////////////
+    
+public static void runScripts(String[] strings) {
+
+		for ( String file : strings ) {          
+		MoaiLog.i ( "MoaiRenderer runScripts: Running " + file + " script" );            
+		Moai.runScript ( file );
+		}  
+}
+
+	
+	
 
     @Override
     protected void onAttachedToWindow() {       
