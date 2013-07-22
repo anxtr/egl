@@ -482,40 +482,119 @@ class myView extends SurfaceView implements SurfaceHolder.Callback
 
     
          	
-     	
-//GAMELOOP         	
+ //GAMELOOP  
+
+               
+
+     /*
+
          Thread myThread = new Thread(new Runnable() {
+
              @Override
+
              public void run() {
-            	 
-	  		       while (true) 
-	  		       {
-	  		    		EGL10 egl1 = (EGL10)EGLContext.getEGL();	
-	  		    		egl1 .eglWaitNative(EGL10.EGL_CORE_NATIVE_ENGINE, null);
-	  		      	  
-	  		
-	  		      			Moai.update ();  //MOAIRenderMgr::Get ().Render (); GETS CALLED OF UPDATE  
-	 
-	  		      		egl1 .eglSwapBuffers(MoaiActivity.mEGLDisplay,MoaiActivity.mEGLSurface);
-	  		      	egl1 .eglWaitGL();
-	  		 		 	
-			  		 		  	try {
-			  						Thread.sleep(5);
-			  					} catch (InterruptedException e) {
-			  						// TODO Auto-generated catch block
-			  						e.printStackTrace();
-			  					}  
-			  		          
-	  		       } 
-            	 
-      
+
+                 
+
+                               while (true)
+
+                               {
+
+                                        EGL10 egl = (EGL10)EGLContext.getEGL();
+
+                                       
+
+                       
+
+                                        egl.eglWaitNative(EGL10.EGL_CORE_NATIVE_ENGINE, null);
+
+                                 
+
+                       
+
+                                                Moai.update ();  //MOAIRenderMgr::Get ().Render (); GETS CALLED OF UPDATE  
+
+                         
+
+                                        egl.eglSwapBuffers(MoaiActivity.mEGLDisplay,MoaiActivity.mEGLSurface);
+
+                                        egl.eglWaitGL();
+
+                                       
+
+                         
+
+                                               
+
+                                                                try {
+
+                                                                        Thread.sleep(5);
+
+                                                                } catch (InterruptedException e) {
+
+                                                                        // TODO Auto-generated catch block
+
+                                                                        e.printStackTrace();
+
+                                                                }  
+
+                                                 
+
+                               }
+
+                 
+
+                       
+
+                               
+
+                               
+
              }
+
          });
+
          
-         
+
    
+
          myThread.start();
-        
+
+       
+
+        */
+
+               
+
+     
+
+            final Handler handler = new Handler();
+
+            Runnable myDraw = new Runnable() {
+
+               
+
+                @Override
+
+                public void run() {
+
+                        egl.eglSwapBuffers(MoaiActivity.mEGLDisplay,MoaiActivity.mEGLSurface);
+
+                        Moai.update ();
+
+                 // egl.eglSwapBuffers(eglDisplay, surface);
+
+                  handler.post(this);
+
+                }
+
+              };
+
+              handler.post(myDraw);
+
+ 
+
+ 
         
       
   
