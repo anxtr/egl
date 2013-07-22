@@ -59,7 +59,7 @@ public class MoaiActivity extends Activity {
 
 
     static {
-      
+    	
 
         MoaiLog.i ( "Loading libmoai.so" );  
         		System.loadLibrary ( "moai" );     
@@ -365,7 +365,7 @@ class myView extends SurfaceView implements SurfaceHolder.Callback
 
 
     public void surfaceCreated(SurfaceHolder holder) {  
-    	 Log.v("SDL", "number-2: surfaceCreated()");
+    	 Log.v("SDL", "trace-2: surfaceCreated()");
     }
 
     
@@ -387,7 +387,7 @@ class myView extends SurfaceView implements SurfaceHolder.Callback
 	@Override
 	public void surfaceChanged(SurfaceHolder arg0, int arg1, int arg2, int arg3) {
 		// TODO Auto-generated method stub
-		 Log.v("SDL", "number-3: surfaceChanged()");
+		 Log.v("SDL", "trace-3: surfaceChanged()");
 		 
     	 
 //EGL INSTANCE
@@ -398,7 +398,7 @@ class myView extends SurfaceView implements SurfaceHolder.Callback
         EGLDisplay dpy = egl.eglGetDisplay(EGL10.EGL_DEFAULT_DISPLAY);
         
         if (dpy == EGL10.EGL_NO_DISPLAY) {
-        	Log.v("SDL", "number-: DISPLAY FAILED");
+        	Log.v("SDL", "trace-: DISPLAY FAILED");
         }
 
         
@@ -472,10 +472,11 @@ class myView extends SurfaceView implements SurfaceHolder.Callback
       
         
 //DETECT
-     	Moai.detectGraphicsContext ();        
+	 	Log.v("SDL", "trace-3-context-->RUNNING LUA EZRA");   
+     				Moai.detectGraphicsContext ();        
         
 //RUN
-      	 	Log.v("SDL", "number-12-context-->RUNNING LUA EZRA");            
+      	 	Log.v("SDL", "trace-4-context-->RUNNING LUA EZRA");            
       	 	runScripts ( new String [] { "../init.lua", "main.lua" } );
               
 
@@ -523,7 +524,7 @@ class myView extends SurfaceView implements SurfaceHolder.Callback
     protected void onAttachedToWindow() {       
 
         super.onAttachedToWindow();
-      	 Log.v("SDL", "number-12-context-->WINDOW");   	
+      	 Log.v("SDL", "trace-1-context-->WINDOW");   	
     }
 
     
@@ -542,7 +543,7 @@ class myView extends SurfaceView implements SurfaceHolder.Callback
 	@Override
 	public void surfaceDestroyed(SurfaceHolder arg0) {
 		// TODO Auto-generated method stub
-		 Log.v("SDL", "number-12-context-->DESTROIED");   
+		 Log.v("SDL", "trace-12-context-->DESTROIED");   
 		
 	}
 }
