@@ -472,7 +472,7 @@ class myView extends SurfaceView implements SurfaceHolder.Callback
       
         
 //DETECT
-	 	Log.v("SDL", "trace-3-context-->RUNNING LUA EZRA");   
+	 	Log.v("SDL", "trace-3-context-->Moai.detectGraphicsContext");   
      				Moai.detectGraphicsContext ();        
         
 //RUN
